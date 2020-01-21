@@ -15,6 +15,7 @@ import org.apache.kafka.common.serialization.StringSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.*;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.BlockingQueue;
@@ -24,24 +25,19 @@ import java.util.concurrent.TimeUnit;
 
 public class TwitterProducer {
 
-    private String consumerKey = "3y5t1qs4Jk2R1XvZVei9ufURt";
-    private String consumerSecret = "6t87rlookkbVvTvpjem0XHYUgXNUoHm4tyZiZ9QFb15tpa6T4n";
-    private String token = "1219597874230484992-7PkJFBheCSJOU1PVHg596AIYwHLAhI";
-    private String secret = "egLMFqHiUrdbldPNfsWUWLNA9hSH0aBO9GrbZuEP2rVE9";
-
     Logger logger = LoggerFactory.getLogger(TwitterProducer.class.getName());
 
     List<String> terms = Lists.newArrayList("india");
 
     public TwitterProducer(){}
 
-    public void execute() {
+    public void execute(String consumerKey, String consumerSecret, String token, String secret) {
 
         // Set up a message queue (Blocking queue)
         BlockingQueue<String> msgQueue = new LinkedBlockingQueue<String>(1000);
 
         // Create a Twitter client
-        final Client client = createTwitterClient(msgQueue);
+        final Client client = createTwitterClient(msgQueue,consumerKey,consumerSecret,token,secret);
 
         // Attempt to establish connection
         client.connect();
@@ -81,7 +77,7 @@ public class TwitterProducer {
         }
     }
 
-    public Client createTwitterClient(BlockingQueue<String> msgQueue) {
+    public Client createTwitterClient(BlockingQueue<String> msgQueue, String consumerKey, String consumerSecret, String token, String secret) {
 
         // Declare the host you want to connect to, the endpoint and the authentication
         Hosts hosebirdHosts = new HttpHosts(Constants.STREAM_HOST);
@@ -123,7 +119,28 @@ public class TwitterProducer {
 
     }
 
-    public static void main(String[] args) {
-        new TwitterProducer().execute();
+    public static void main(String[] args) throws IOException {
+        Properties prop = new Properties();
+
+
+        FileInputStream file = new FileInputStream("src/main/resources/config.properties");
+
+        if (file != null) {
+            prop.load(file);
+        } else {
+            throw new FileNotFoundException("property file '" + prop + "' not found in the classpath");
+        }
+
+        String consumerKey="";
+        String consumerSecret="";
+        String token="";
+        String secret="";
+
+        consumerKey += prop.getProperty(consumerKey);
+        consumerSecret += prop.getProperty(consumerSecret);
+        token += prop.getProperty(token);
+        secret += prop.getProperty(secret);
+
+        new TwitterProducer().execute(consumerKey,consumerSecret,token,secret);
     }
 }
